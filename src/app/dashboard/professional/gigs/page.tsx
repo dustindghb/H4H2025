@@ -11,12 +11,20 @@ import {
   Button,
   Chip,
   TextField,
+  IconButton,
+  Fab,
   useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import {
+  Add as AddIcon,
   Search as SearchIcon,
   Person as PersonIcon,
   Schedule as ScheduleIcon,
+  WorkOutline as WorkIcon
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 
@@ -52,6 +60,26 @@ const sampleProjects: Project[] = [
     postedBy: 'Finance Pro LLC',
     status: 'Open'
   },
+  {
+    id: '3',
+    title: 'Web Development Project',
+    description: 'Looking for collaborators to build a responsive website for a local business.',
+    skills: ['HTML', 'CSS', 'JavaScript', 'React'],
+    duration: '3 weeks',
+    difficulty: 'Intermediate',
+    postedBy: 'WebDev Solutions',
+    status: 'In Progress'
+  },
+  {
+    id: '4',
+    title: 'Market Research Study',
+    description: 'Conducting a market research study for a new app. Need help with data collection and analysis.',
+    skills: ['Market Research', 'Data Analysis', 'Survey Design'],
+    duration: '4 weeks',
+    difficulty: 'Beginner',
+    postedBy: 'Research Team',
+    status: 'Open'
+  }
 ];
 
 const difficultyColors = {
@@ -66,10 +94,11 @@ const statusColors = {
   'Completed': '#9E9E9E'
 };
 
-export default function StudentGigWork() {
+export default function GigWorkBoard() {
   const theme = useTheme();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
+  const [openDialog, setOpenDialog] = useState(false);
 
   const handleProjectClick = (projectId: string) => {
     router.push(`/dashboard/student/gigs/${projectId}`);
@@ -87,10 +116,21 @@ export default function StudentGigWork() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Available Projects
-      </Typography>
+      {/* Header Section */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h4">
+          Project Board
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setOpenDialog(true)}
+        >
+          Post Project
+        </Button>
+      </Box>
 
+      {/* Search Section */}
       <Box sx={{ mb: 4 }}>
         <TextField
           fullWidth
@@ -104,6 +144,7 @@ export default function StudentGigWork() {
         />
       </Box>
 
+      {/* Projects Grid */}
       <Grid container spacing={3}>
         {filteredProjects.map((project) => (
           <Grid item xs={12} sm={6} md={4} key={project.id}>
@@ -182,13 +223,28 @@ export default function StudentGigWork() {
                   variant="contained"
                   onClick={() => handleProjectClick(project.id)}
                 >
-                  Apply Now
+                  View Details
                 </Button>
               </CardActions>
             </Card>
           </Grid>
         ))}
       </Grid>
+
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Post a New Project</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" color="text.secondary">
+            Project creation form will be implemented here.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={() => setOpenDialog(false)}>
+            Post Project
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
