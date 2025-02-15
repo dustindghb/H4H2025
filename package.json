@@ -9,7 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@hono/zod-validator": "^0.4.3",
+    "@mui/icons-material": "^6.4.4",
+    "@mui/material": "^6.4.4",
     "@scalar/hono-api-reference": "^0.5.173",
     "hono": "^4.7.1",
     "hono-openapi": "^0.4.4",
