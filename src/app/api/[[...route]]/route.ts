@@ -6,6 +6,15 @@ import { describeRoute } from "hono-openapi";
 import { resolver, validator as vValidator } from "hono-openapi/zod";
 import { openAPISpecs } from "hono-openapi";
 import { apiReference } from "@scalar/hono-api-reference";
+import { auth } from "@/server/lib/auth"; // path to your auth file
+import user from "@/server/routes/user"; // path to your user file
+
+declare module "hono" {
+  interface ContextVariableMap {
+    user: typeof auth.$Infer.Session.user | null;
+    session: typeof auth.$Infer.Session.session | null;
+  }
+}
 
 export const runtime = "edge";
 
@@ -15,18 +24,30 @@ const querySchema = z.object({
   name: z.string(),
 });
 
-const responseSchema = z.string();
-
 app
+  .use("*", async (c, next) => {
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+
+    if (!session) {
+      c.set("user", null);
+      c.set("session", null);
+      return next();
+    }
+
+    c.set("user", session.user);
+    c.set("session", session.session);
+    return next();
+  })
+  .on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw))
   .get(
-    "/",
+    "/hello",
     describeRoute({
       description: "Say hello to the user",
       responses: {
         200: {
           description: "Successful response",
           content: {
-            "text/plain": { schema: resolver(responseSchema) },
+            "text/plain": { schema: resolver(z.string()) },
           },
         },
       },
@@ -37,11 +58,7 @@ app
       return c.text(`Hello ${query?.name ?? "Hono"}!`);
     }
   )
-  .get("/hello", (c) => {
-    return c.json({
-      message: "Hello Next.js!",
-    });
-  })
+  .route("/user", user)
   .get(
     "/openapi",
     openAPISpecs(app, {
