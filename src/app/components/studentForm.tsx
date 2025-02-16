@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import {
   Box,
   Paper,
@@ -17,82 +18,15 @@ import {
   Alert,
   FormHelperText,
   CircularProgress,
-  Chip,
-  IconButton,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-interface MajorGroup {
-  name: string;
-  majors: string[];
+interface FormSection {
+  title: string;
+  maxSelections?: number;
+  options: string[];
 }
 
-const majorGroups: MajorGroup[] = [
-  {
-    name: "Engineering & Technology",
-    majors: [
-      "Computer Science",
-      "Electrical Engineering",
-      "Mechanical Engineering",
-      "Software Engineering",
-      "Civil Engineering"
-    ]
-  },
-  {
-    name: "Natural Sciences",
-    majors: [
-      "Biology",
-      "Chemistry",
-      "Physics",
-      "Environmental Science",
-      "Mathematics"
-    ]
-  },
-  {
-    name: "Business & Economics",
-    majors: [
-      "Business Administration",
-      "Economics",
-      "Finance",
-      "Marketing",
-      "Accounting"
-    ]
-  },
-  {
-    name: "Arts & Humanities",
-    majors: [
-      "English Literature",
-      "History",
-      "Philosophy",
-      "Fine Arts",
-      "Music"
-    ]
-  },
-  {
-    name: "Social Sciences",
-    majors: [
-      "Psychology",
-      "Sociology",
-      "Political Science",
-      "Anthropology",
-      "Communications"
-    ]
-  },
-  {
-    name: "Health Sciences",
-    majors: [
-      "Nursing",
-      "Public Health",
-      "Pre-Medicine",
-      "Nutrition",
-      "Physical Therapy"
-    ]
-  }
-];
-
-const formSections = [
+const formSections: FormSection[] = [
   {
     title: "Skills and Strengths",
     options: [
@@ -182,28 +116,50 @@ const theme = createTheme({
       contrastText: '#FFFFFF',
     },
   },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          '&:hover': {
+            backgroundColor: '#7B5ECD',
+          },
+        },
+      },
+    },
+    MuiCheckbox: {
+      styleOverrides: {
+        root: {
+          color: '#896ED1',
+          '&.Mui-checked': {
+            color: '#896ED1',
+          },
+        },
+      },
+    },
+    MuiStepIcon: {
+      styleOverrides: {
+        root: {
+          '&.Mui-active': {
+            color: '#896ED1',
+          },
+          '&.Mui-completed': {
+            color: '#896ED1',
+          },
+        },
+      },
+    },
+  },
 });
 
-export default function StudentDashboard() {
+export const StudentForm = () => {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [selections, setSelections] = useState<{ [key: string]: string[] }>(
     formSections.reduce((acc, section) => ({ ...acc, [section.title]: [] }), {})
   );
-  const [selectedMajors, setSelectedMajors] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
-
-  const handleMajorAdd = (major: string) => {
-    if (!selectedMajors.includes(major)) {
-      setSelectedMajors(prev => [...prev, major]);
-    }
-  };
-
-  const handleMajorRemove = (major: string) => {
-    setSelectedMajors(prev => prev.filter(m => m !== major));
-  };
 
   const handleCheckboxChange = (section: string, option: string) => {
     setError(null);
@@ -252,31 +208,33 @@ export default function StudentDashboard() {
 
   const handleSubmit = async () => {
     try {
-      // Validate that at least some selections are made
-      if (selectedMajors.length === 0) {
-        setError('Please select at least one major');
-        return;
-      }
-
-      if (Object.values(selections).every(array => array.length === 0)) {
-        setError('Please complete all sections before submitting');
-        return;
-      }
-
       setIsSubmitting(true);
       setSubmitStatus('idle');
       
       const formData = {
-        skills: selections["Skills and Strengths"],
-        workEnvironments: selections["Work Environment Preferences"],
-        coreValues: selections["Core Values and Motivations"].join(", "),
-        industryInterests: selections["Industry Interests"],
-        learningStyles: selections["Learning Style and Growth"],
-        intrestedMajors: selectedMajors
+        type: 'student',
+        data: {
+          skills: selections["Skills and Strengths"].length > 0 
+            ? selections["Skills and Strengths"] 
+            : [""],
+          workEnvironments: selections["Work Environment Preferences"].length > 0 
+            ? selections["Work Environment Preferences"] 
+            : [""],
+          coreValues: selections["Core Values and Motivations"].length > 0 
+            ? selections["Core Values and Motivations"].join(", ") 
+            : "",
+          industryInterests: selections["Industry Interests"].length > 0 
+            ? selections["Industry Interests"] 
+            : [""],
+          learningStyles: selections["Learning Style and Growth"].length > 0 
+            ? selections["Learning Style and Growth"] 
+            : [""],
+          updatedAt: new Date().toISOString()
+        }
       };
 
-      const response = await fetch('/api/user/student-preferences', {
-        method: 'POST',
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -284,17 +242,12 @@ export default function StudentDashboard() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        console.error('API Error Response:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData
-        });
-        throw new Error(`Failed to update preferences: ${errorData?.message || response.statusText}`);
+        throw new Error('Failed to update profile');
       }
 
       setSubmitStatus('success');
       
+      // Wait a moment to show success message before redirecting
       setTimeout(() => {
         router.push('/dashboard/student');
       }, 1500);
@@ -308,71 +261,32 @@ export default function StudentDashboard() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 'bold' }}>
-          Student Career Profile
-        </Typography>
-
-        <Paper elevation={3} sx={{ p: 4, mb: 4, borderRadius: 2 }}>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-            Interested Majors
+      <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
+        <Paper 
+          elevation={3} 
+          sx={{ 
+            p: 4,
+            borderRadius: 2,
+            background: theme.palette.background.paper
+          }}
+        >
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+            Career Profile
           </Typography>
-          
-          {selectedMajors.length > 0 && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Selected Majors:
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {selectedMajors.map((major) => (
-                  <Chip
-                    key={major}
-                    label={major}
-                    onDelete={() => handleMajorRemove(major)}
-                    deleteIcon={<CloseIcon />}
-                    color="primary"
-                  />
-                ))}
-              </Box>
-            </Box>
-          )}
 
-          <Box sx={{ 
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: 3
-          }}>
-            {majorGroups.map((group) => (
-              <Box key={group.name} sx={{ mb: 3 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
-                  {group.name}
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {group.majors.map((major) => (
-                    <Button
-                      key={major}
-                      variant="outlined"
-                      size="small"
-                      onClick={() => handleMajorAdd(major)}
-                      disabled={selectedMajors.includes(major)}
-                      startIcon={<AddIcon />}
-                      sx={{ 
-                        justifyContent: 'flex-start',
-                        textTransform: 'none'
-                      }}
-                    >
-                      {major}
-                    </Button>
-                  ))}
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        </Paper>
-
-        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {formSections.map((section) => (
+          <Stepper 
+            activeStep={activeStep} 
+            sx={{ 
+              mb: 4,
+              '& .MuiStepLabel-root .Mui-completed': {
+                color: theme.palette.primary.main
+              },
+              '& .MuiStepLabel-root .Mui-active': {
+                color: theme.palette.primary.main
+              }
+            }}
+          >
+            {formSections.map((section, index) => (
               <Step key={section.title}>
                 <StepLabel>{section.title}</StepLabel>
               </Step>
@@ -386,7 +300,12 @@ export default function StudentDashboard() {
               </Typography>
               
               {formSections[activeStep].maxSelections && (
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                <Typography 
+                  variant="subtitle2" 
+                  color="text.secondary" 
+                  gutterBottom
+                  sx={{ mb: 2 }}
+                >
                   Select your top {formSections[activeStep].maxSelections} choices
                 </Typography>
               )}
@@ -397,7 +316,13 @@ export default function StudentDashboard() {
                 </Alert>
               )}
 
-              <FormControl component="fieldset" sx={{ width: '100%' }}>
+              {submitStatus === 'success' && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  Profile submitted successfully!
+                </Alert>
+              )}
+
+              <FormControl component="fieldset" variant="standard" sx={{ width: '100%' }}>
                 <FormGroup>
                   {formSections[activeStep].options.map((option) => (
                     <FormControlLabel
@@ -406,12 +331,27 @@ export default function StudentDashboard() {
                         <Checkbox
                           checked={selections[formSections[activeStep].title].includes(option)}
                           onChange={() => handleCheckboxChange(formSections[activeStep].title, option)}
+                          sx={{
+                            '&.Mui-checked': {
+                              color: theme.palette.primary.main
+                            }
+                          }}
                         />
                       }
-                      label={option}
+                      label={
+                        <Typography sx={{ fontSize: '1rem' }}>
+                          {option}
+                        </Typography>
+                      }
+                      sx={{ mb: 1 }}
                     />
                   ))}
                 </FormGroup>
+                <FormHelperText sx={{ mt: 1 }}>
+                  Selected: {selections[formSections[activeStep].title].length}
+                  {formSections[activeStep].maxSelections && 
+                    ` / ${formSections[activeStep].maxSelections}`}
+                </FormHelperText>
               </FormControl>
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
@@ -419,12 +359,22 @@ export default function StudentDashboard() {
                   variant="outlined"
                   onClick={handleBack}
                   disabled={activeStep === 0}
+                  sx={{ 
+                    borderRadius: 1,
+                    textTransform: 'none',
+                    px: 4
+                  }}
                 >
                   Back
                 </Button>
                 <Button
                   variant="contained"
                   onClick={handleNext}
+                  sx={{ 
+                    borderRadius: 1,
+                    textTransform: 'none',
+                    px: 4
+                  }}
                 >
                   Next
                 </Button>
@@ -432,7 +382,7 @@ export default function StudentDashboard() {
             </>
           ) : (
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                 All steps completed!
               </Typography>
               
@@ -446,7 +396,13 @@ export default function StudentDashboard() {
                 variant="contained"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                sx={{ mt: 2 }}
+                sx={{ 
+                  mt: 2,
+                  borderRadius: 1,
+                  textTransform: 'none',
+                  px: 4,
+                  minWidth: 200
+                }}
               >
                 {isSubmitting ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -463,4 +419,6 @@ export default function StudentDashboard() {
       </Box>
     </ThemeProvider>
   );
-}
+};
+
+export default StudentForm;
