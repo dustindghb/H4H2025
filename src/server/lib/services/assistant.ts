@@ -72,7 +72,7 @@ export class AssistantService {
     return thread;
   }
 
-  async getUserThread(userId: string, assistantId: string) {
+  async getUserThread(userId: string) {
     // Look up existing thread or create new one
     // Note: OpenAI doesn't provide thread search, so you'll need to store this mapping in your database
     const thread = await this.createThreadForUser(userId);

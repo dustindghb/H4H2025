@@ -50,7 +50,7 @@ export default function SignUp() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>("");
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep] = useState(0);
 
   const handleGoogleSignUp = async () => {
     try {

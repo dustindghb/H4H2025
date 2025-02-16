@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Box, Button, Typography, useTheme, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  useTheme,
+  CircularProgress,
+} from "@mui/material";
 import { useRouter } from "next/navigation";
 import { createAuthClient } from "better-auth/react";
 const { useSession } = createAuthClient();
@@ -30,42 +36,41 @@ interface UserSessionResponse {
 }
 
 export default function LandingPage() {
-  const { data: session, isPending, error } = useSession();
+  const { data: session, isPending } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const theme = useTheme();
 
   useEffect(() => {
     const checkUserType = async () => {
       if (!session) {
-        console.log('No session found');
+        console.log("No session found");
         setIsLoading(false);
         return;
       }
 
       try {
-        console.log('Fetching user session...');
-        const response = await fetch('/api/user/session');
-        
+        console.log("Fetching user session...");
+        const response = await fetch("/api/user/session");
+
         if (!response.ok) {
-          throw new Error('Failed to fetch user session');
+          throw new Error("Failed to fetch user session");
         }
 
         const data: UserSessionResponse = await response.json();
-        console.log('User response:', data);
-        console.log('User type:', data.user.type);
-        
-        if (data.user.type === 'student' || data.user.type === 'professional') {
+        console.log("User response:", data);
+        console.log("User type:", data.user.type);
+
+        if (data.user.type === "student" || data.user.type === "professional") {
           console.log(`User type found: ${data.user.type}, redirecting...`);
           await router.push(`/dashboard/${data.user.type}`);
           return;
         } else {
-          console.log('No valid user type found');
+          console.log("No valid user type found");
         }
 
         setIsLoading(false);
       } catch (error) {
-        console.error('Error checking user type:', error);
+        console.error("Error checking user type:", error);
         setIsLoading(false);
       }
     };
@@ -83,21 +88,21 @@ export default function LandingPage() {
     try {
       setIsLoading(true);
 
-      const response = await fetch('/api/user/type', {
-        method: 'PATCH',
+      const response = await fetch("/api/user/type", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ type }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update user type');
+        throw new Error("Failed to update user type");
       }
 
       router.push(`/dashboard/${type}`);
     } catch (error) {
-      console.error('Error updating user type:', error);
+      console.error("Error updating user type:", error);
       setIsLoading(false);
     }
   };

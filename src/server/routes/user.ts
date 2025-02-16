@@ -20,10 +20,6 @@ import {
 } from "../lib/db/schema";
 import { and, desc, eq } from "drizzle-orm";
 import OpenAI from "openai";
-import {
-  createProfessionalEmbedding,
-  initializeThread,
-} from "../lib/openai/utils";
 import { VectorStoreService } from "../lib/services/vector-store";
 import { AssistantService } from "../lib/services/assistant";
 
