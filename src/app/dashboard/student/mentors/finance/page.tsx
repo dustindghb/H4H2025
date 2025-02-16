@@ -11,7 +11,7 @@ import {
   Avatar,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import ComputerIcon from '@mui/icons-material/Computer'; // Change icon based on mentor type
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 const LoadingMessage = ({ color }: { color: string }) => (
   <Box
@@ -38,13 +38,12 @@ interface Message {
   content: string;
 }
 
-// Change these based on mentor type
-const MENTOR_COLOR = '#1565C0'; // Use appropriate color
-const MENTOR_TITLE = 'CS Career Mentor';
-const MENTOR_DESCRIPTION = 'Ask questions about CS careers, skills, or technologies...';
-const API_ENDPOINT = '/api/chat-cs'; // Change based on mentor type
+const MENTOR_COLOR = '#2E7D32';
+const MENTOR_TITLE = 'Finance Career Mentor';
+const MENTOR_DESCRIPTION = 'Ask questions about finance careers, investment strategies, or market analysis...';
+const API_ENDPOINT = '/api/chat-finance';
 
-export default function MentorChat() {
+export default function FinanceMentorChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +52,7 @@ export default function MentorChat() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]); // Added isLoading to scroll when loading state changes
+  }, [messages, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +104,6 @@ export default function MentorChat() {
 
   return (
     <Box sx={{ p: 3, maxWidth: 1000, mx: 'auto' }}>
-      {/* Header */}
       <Box sx={{ 
         display: 'flex', 
         alignItems: 'center', 
@@ -123,7 +121,7 @@ export default function MentorChat() {
             height: 56
           }}
         >
-          <ComputerIcon sx={{ fontSize: 32 }} />
+          <TrendingUpIcon sx={{ fontSize: 32 }} />
         </Avatar>
         <Box>
           <Typography variant="h5" gutterBottom>
@@ -135,7 +133,6 @@ export default function MentorChat() {
         </Box>
       </Box>
 
-      {/* Chat Container */}
       <Paper 
         elevation={3} 
         sx={{ 
@@ -146,7 +143,6 @@ export default function MentorChat() {
           borderRadius: 2,
         }}
       >
-        {/* Messages Area */}
         <Box sx={{ 
           p: 2, 
           flexGrow: 1, 
@@ -156,7 +152,7 @@ export default function MentorChat() {
           gap: 2
         }}>
           <Typography variant="body2" color="text.secondary" align="center">
-            Start chatting with your mentor
+            Start chatting with your finance mentor
           </Typography>
 
           {messages.map((message) => (
@@ -180,7 +176,6 @@ export default function MentorChat() {
           <div ref={messagesEndRef} />
         </Box>
 
-        {/* Input Area */}
         <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
           <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px' }}>
             <TextField

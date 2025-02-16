@@ -8,7 +8,7 @@ export default async function Layout({
   children: React.ReactNode;
 }) {
   const session = await auth.api.getSession({
-    headers: await headers(), // you need to pass the headers object.
+    headers: await headers(), 
   });
 
   if (!session) {
