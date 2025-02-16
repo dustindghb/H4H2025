@@ -9,7 +9,14 @@ const MAJOR_ASSISTANT_MAP: Record<
     assistantId: "asst_Vg6DL8zuPNTddfFIQRI8n7PQ",
     vectorStoreId: "vs_67b131c633488191b66762fb1f3e2b84",
   },
-  // Add more majors and their corresponding assistant/store IDs
+  Business: {
+    assistantId: "asst_v9djFHXFqZ2l3z8Ea5o1Dh46",
+    vectorStoreId: "vs_67b1408545488191ab6a553e8d0a4865",
+  },
+  Healthcare: {
+    assistantId: "asst_0Y35YmSyWLY9xryRoMSPFGNy",
+    vectorStoreId: "asst_0Y35YmSyWLY9xryRoMSPFGNy",
+  },
 };
 
 export class AssistantService {

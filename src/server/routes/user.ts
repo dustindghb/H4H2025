@@ -309,7 +309,7 @@ app
         },
       },
     }),
-    zValidator("json", professionalinsertSchema),
+    zValidator("json", professionalinsertSchema.extend({ major: z.string() })),
     async (c) => {
       const user = c.get("user");
       const professionalInfo = c.req.valid("json");
@@ -338,7 +338,7 @@ app
 
         // Get existing assistant for major
         const { assistantId, vectorStoreId } =
-          await assistantService.getAssistantForMajor("Computer Science");
+          await assistantService.getAssistantForMajor(professionalInfo.major);
 
         // Create file from professional info
         const file = await openai.files.create({

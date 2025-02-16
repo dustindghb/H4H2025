@@ -144,4 +144,5 @@ export const professionalinsertSchema = createInsertSchema(professional).omit({
   userId: true,
   createdAt: true,
   updatedAt: true,
+  assistantId: true,
 });
