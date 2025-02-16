@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
 import Image from 'next/image';
 import {
   Box,
@@ -8,15 +8,46 @@ import {
   Typography,
   TextField,
   Button,
-  Stepper,
-  Step,
-  StepLabel,
-  Grid,
-  CircularProgress,
-} from '@mui/material';
+  Autocomplete,
+} from "@mui/material";
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
-// Vira Bot Styled Components
+const fieldCategories = [
+  {
+    name: "Engineering & Technology",
+    majors: ["Computer Science", "Electrical Engineering", "Mechanical Engineering", "Software Engineering", "Civil Engineering"]
+  },
+  {
+    name: "Natural Sciences",
+    majors: ["Biology", "Chemistry", "Physics", "Environmental Science", "Mathematics"]
+  },
+  {
+    name: "Business & Economics",
+    majors: ["Business Administration", "Economics", "Finance", "Marketing", "Accounting"]
+  },
+  {
+    name: "Arts & Humanities",
+    majors: ["English Literature", "History", "Philosophy", "Fine Arts", "Music"]
+  },
+  {
+    name: "Social Sciences",
+    majors: ["Psychology", "Sociology", "Political Science", "Anthropology", "Communications"]
+  },
+  {
+    name: "Health Sciences",
+    majors: ["Nursing", "Public Health", "Pre-Medicine", "Nutrition", "Physical Therapy"]
+  }
+];
+
+// Create flat array of majors with their categories
+const majorOptions = fieldCategories.flatMap(category => 
+  category.majors.map(major => ({
+    major,
+    category: category.name
+  }))
+);
+
+// Styled components for Vira Bot
 const BotContainer = styled(Box)({
   position: 'fixed',
   right: '40px',
@@ -96,14 +127,6 @@ const SpeechBubble = styled(Paper)(({ theme }) => ({
   },
 }));
 
-const sections = [
-  "Career Path Experience",
-  "Daily Work Reality",
-  "Industry Insights",
-  "Career Development",
-  "Real-World Advice",
-];
-
 const theme = createTheme({
   palette: {
     primary: {
@@ -116,28 +139,84 @@ const theme = createTheme({
 });
 
 export default function ProfessionalProfile() {
-  const [activeStep, setActiveStep] = useState(0);
-  const [userName, setUserName] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    // ... existing form data state ...
+    major: "",
+    currentRole: "",
+    industrySector: "",
+    companySize: "",
+    yearsInRole: "",
+    careerPath: "",
+    careerJourney: "",
+    dailyActivities: "",
+    toolsUsed: "",
+    technicalSkills: "",
+    softSkills: "",
+    industryTrends: "",
+    industryAdvice: "",
+    professionalDevelopment: "",
+    keyFactors: "",
+    careerLessons: "",
+    resources: "",
   });
 
-  useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const response = await fetch('/api/user/session');
-        const data = await response.json();
-        setUserName(data.user.name);
-      } catch (error) {
-        console.error('Error fetching session:', error);
-      }
+  const handleInputChange = (field: keyof typeof formData) => 
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setFormData(prev => ({
+        ...prev,
+        [field]: event.target.value,
+      }));
+  };
+
+  const handleMajorChange = (_event: any, newValue: { major: string, category: string } | null) => {
+    setFormData({
+      ...formData,
+      major: newValue ? newValue.major : "",
+    });
+  };
+
+  const handleSubmit = async () => {
+    const payload = {
+      bio: formData.careerPath || "",
+      industry: formData.industrySector || "",
+      currentRole: formData.currentRole || "",
+      company: null,
+      yearsExperience: formData.yearsInRole ? parseInt(formData.yearsInRole, 10) : 1,
+      yearsInCurrentRole: formData.yearsInRole ? parseInt(formData.yearsInRole, 10) : 1,
+      careerTimeline: formData.careerPath || "",
+      careerJourney: formData.careerJourney || "",
+      coreDailyActivities: formData.dailyActivities || "",
+      toolsAndTechnology: formData.toolsUsed || "",
+      technicalSkills: formData.technicalSkills || "",
+      softSkills: formData.softSkills || "",
+      industryTrends: formData.industryTrends || "",
+      professionalDevelopmentActivities: null,
+      adviceForNewcomers: formData.industryAdvice || "",
+      keySuccessFactors: formData.keyFactors || "",
+      resources: null,
+      major: formData.major || ""
     };
 
-    fetchSession();
-  }, []);
+    try {
+      const response = await fetch("/api/user/professional-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-  // ... existing handlers ...
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        console.error("Error response:", responseData);
+        alert(`Error: ${responseData.message || "Profile submission failed"}`);
+        return;
+      }
+
+      alert("Profile submitted successfully!");
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("Something went wrong. Please check the console for more details.");
+    }
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -155,44 +234,145 @@ export default function ProfessionalProfile() {
             Professional Profile
           </Typography>
 
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {sections.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
-          <form>
-            {renderStepContent(activeStep)}
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-              <Button disabled={activeStep === 0} onClick={handleBack}>
-                Back
-              </Button>
-              {activeStep === sections.length - 1 ? (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CircularProgress size={20} color="inherit" />
-                      <span>Submitting...</span>
-                    </Box>
-                  ) : (
-                    'Submit'
-                  )}
-                </Button>
-              ) : (
-                <Button variant="contained" onClick={handleNext}>
-                  Next
-                </Button>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Autocomplete
+              options={majorOptions}
+              getOptionLabel={(option) => option.major}
+              groupBy={(option) => option.category}
+              value={majorOptions.find(option => option.major === formData.major) || null}
+              onChange={handleMajorChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Field of Study"
+                  required
+                  fullWidth
+                  helperText="Select your major or field of study"
+                />
               )}
-            </Box>
-          </form>
+            />
+
+            <TextField
+              fullWidth
+              label="Current Job Title"
+              value={formData.currentRole}
+              onChange={handleInputChange("currentRole")}
+            />
+
+            <TextField
+              fullWidth
+              label="Industry Sector"
+              value={formData.industrySector}
+              onChange={handleInputChange("industrySector")}
+            />
+
+            <TextField
+              fullWidth
+              label="Company Size"
+              value={formData.companySize}
+              onChange={handleInputChange("companySize")}
+              placeholder="e.g., Small (1-50), Medium (51-200), Large (201+)"
+            />
+
+            <TextField
+              fullWidth
+              label="Years in Current Role"
+              value={formData.yearsInRole}
+              onChange={handleInputChange("yearsInRole")}
+              type="number"
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Career Progression Timeline"
+              value={formData.careerPath}
+              onChange={handleInputChange("careerPath")}
+              placeholder="Describe your career progression, including major role changes and responsibilities"
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Core Daily Activities"
+              value={formData.dailyActivities}
+              onChange={handleInputChange("dailyActivities")}
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Tools and Technologies Used"
+              value={formData.toolsUsed}
+              onChange={handleInputChange("toolsUsed")}
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Technical Skills Required"
+              value={formData.technicalSkills}
+              onChange={handleInputChange("technicalSkills")}
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Soft Skills Needed"
+              value={formData.softSkills}
+              onChange={handleInputChange("softSkills")}
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Industry Trends"
+              value={formData.industryTrends}
+              onChange={handleInputChange("industryTrends")}
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Professional Development Activities"
+              value={formData.professionalDevelopment}
+              onChange={handleInputChange("professionalDevelopment")}
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Key Success Factors"
+              value={formData.keyFactors}
+              onChange={handleInputChange("keyFactors")}
+            />
+
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Advice for Newcomers"
+              value={formData.industryAdvice}
+              onChange={handleInputChange("industryAdvice")}
+            />
+
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSubmit}
+              sx={{ mt: 2 }}
+            >
+              Submit Profile
+            </Button>
+          </Box>
         </Paper>
 
         {/* Right Column - Vira Bot */}
@@ -225,10 +405,14 @@ export default function ProfessionalProfile() {
             </Box>
             <SpeechBubble elevation={3}>
               <Typography variant="body1">
-                Hi {userName}! Thank you for joining us.
+                Hi! Thank you for joining us.
               </Typography>
               <Typography variant="body2" sx={{ mt: 1 }}>
-                If you have side projects and are looking for enthusiastic people to work with, make a post in the gig menu. Please share your professional experience to help improve our AI mentors.
+                If you have side projects that need volunteers feel free to make a post
+                on the Gig board
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Please share your professional experience to help improve our AI mentors.
               </Typography>
             </SpeechBubble>
           </BotContainer>
