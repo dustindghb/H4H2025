@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   Box,
   Paper,
@@ -11,18 +12,13 @@ import {
   FormControlLabel,
   Checkbox,
   Button,
-  Stepper,
-  Step,
-  StepLabel,
   Alert,
-  FormHelperText,
-  CircularProgress,
   Chip,
-  IconButton,
+  CircularProgress,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
 interface MajorGroup {
   name: string;
@@ -173,6 +169,137 @@ const formSections = [
   }
 ];
 
+// Define keyframes as a CSS string
+const floatAnimation = `
+  @keyframes floatInOut {
+    0%, 100% {
+      transform: translateX(0) rotate(-45deg);
+    }
+    50% {
+      transform: translateX(-20px) rotate(-45deg);
+    }
+  }
+`;
+
+const BotContainer = styled(Box)({
+  position: 'fixed',
+  right: '40px',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  display: 'flex',
+  alignItems: 'center',
+  animation: 'floatUpDown 3s ease-in-out infinite',
+  zIndex: 10,
+  '@keyframes floatUpDown': {
+    '0%, 100%': {
+      transform: 'translateY(-50%)',
+    },
+    '50%': {
+      transform: 'translateY(-60%)',
+    },
+  },
+});
+
+const BotHead = styled(Box)({
+  width: '120px',
+  height: '120px',
+  position: 'relative',
+  zIndex: 2,
+});
+
+const BotBody = styled(Box)({
+  width: '140px',
+  height: '160px',
+  backgroundColor: '#BDBDBD', // Darker gray
+  borderRadius: '10px',
+  marginTop: '-20px',
+  position: 'relative',
+  zIndex: 1,
+});
+
+const HoverCircle = styled(Box)({
+  width: '30px',
+  height: '30px',
+  backgroundColor: '#E0F4E0',
+  borderRadius: '50%',
+  position: 'absolute',
+  bottom: '-40px',
+  opacity: 0.8,
+  animation: 'pulse 2s ease-in-out infinite',
+  '@keyframes pulse': {
+    '0%, 100%': {
+      transform: 'scale(1)',
+      opacity: 0.8,
+    },
+    '50%': {
+      transform: 'scale(1.1)',
+      opacity: 1,
+    },
+  },
+});
+
+const SpeechBubble = styled(Paper)(({ theme }) => ({
+  position: 'absolute',
+  padding: theme.spacing(2),
+  backgroundColor: '#E0F4E0',
+  maxWidth: '200px',
+  borderRadius: '15px',
+  right: '180px',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  zIndex: 3,
+  '&:before': {
+    content: '""',
+    position: 'absolute',
+    right: '-20px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    borderStyle: 'solid',
+    borderWidth: '10px 20px 10px 0',
+    borderColor: 'transparent #E0F4E0 transparent transparent',
+  },
+}));
+
+// Updated JSX structure
+{/* Right Column - Vira Bot */}
+<Box sx={{ position: 'relative' }}>
+  <BotContainer>
+    <Box sx={{ 
+      position: 'relative', 
+      width: '140px', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center'
+    }}>
+      <BotHead>
+        <Image 
+          src="/bot.png" 
+          alt="Vira Bot" 
+          width={120} 
+          height={120} 
+          style={{ 
+            objectFit: 'contain',
+            position: 'relative',
+            zIndex: 2
+          }}
+        />
+      </BotHead>
+      <BotBody>
+        <HoverCircle sx={{ left: '20px' }} />
+        <HoverCircle sx={{ right: '20px' }} />
+      </BotBody>
+    </Box>
+    <SpeechBubble elevation={3}>
+      <Typography variant="body1">
+        Hi student, I am Vira! Fill in your profile and select majors to get started.
+      </Typography>
+      <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
+        Clicking majors will generate clones of me capable ofreferencing industry professional experiences to provide mentorship and guidance.
+      </Typography>
+    </SpeechBubble>
+  </BotContainer>
+</Box>
+
 const theme = createTheme({
   palette: {
     primary: {
@@ -186,7 +313,6 @@ const theme = createTheme({
 
 export default function StudentDashboard() {
   const router = useRouter();
-  const [activeStep, setActiveStep] = useState(0);
   const [selections, setSelections] = useState<{ [key: string]: string[] }>(
     formSections.reduce((acc, section) => ({ ...acc, [section.title]: [] }), {})
   );
@@ -194,6 +320,21 @@ export default function StudentDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const response = await fetch('/api/user/session');
+        const data = await response.json();
+        setUserName(data.user.name);
+      } catch (error) {
+        console.error('Error fetching session:', error);
+      }
+    };
+
+    fetchSession();
+  }, []);
 
   const handleMajorAdd = (major: string) => {
     if (!selectedMajors.includes(major)) {
@@ -227,32 +368,8 @@ export default function StudentDashboard() {
     }
   };
 
-  const handleNext = () => {
-    const currentSection = formSections[activeStep];
-    const currentSelections = selections[currentSection.title];
-    
-    if (currentSection.maxSelections && currentSelections.length !== currentSection.maxSelections) {
-      setError(`Please select exactly ${currentSection.maxSelections} options`);
-      return;
-    }
-    
-    if (currentSelections.length === 0) {
-      setError('Please select at least one option');
-      return;
-    }
-    
-    setActiveStep(prev => prev + 1);
-    setError(null);
-  };
-
-  const handleBack = () => {
-    setActiveStep(prev => prev - 1);
-    setError(null);
-  };
-
   const handleSubmit = async () => {
     try {
-      // Validate that at least some selections are made
       if (selectedMajors.length === 0) {
         setError('Please select at least one major');
         return;
@@ -269,7 +386,7 @@ export default function StudentDashboard() {
       const formData = {
         skills: selections["Skills and Strengths"],
         workEnvironments: selections["Work Environment Preferences"],
-        coreValues: selections["Core Values and Motivations"].join(", "),
+        coreValues: selections["Core Values and Motivations"],
         industryInterests: selections["Industry Interests"],
         learningStyles: selections["Learning Style and Growth"],
         intrestedMajors: selectedMajors
@@ -284,13 +401,7 @@ export default function StudentDashboard() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        console.error('API Error Response:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData
-        });
-        throw new Error(`Failed to update preferences: ${errorData?.message || response.statusText}`);
+        throw new Error('Failed to update preferences');
       }
 
       setSubmitStatus('success');
@@ -308,12 +419,83 @@ export default function StudentDashboard() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', p: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 'bold' }}>
-          Student Career Profile
-        </Typography>
+      <style>{floatAnimation}</style>
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: '1fr 1fr 1fr',
+        gap: 4,
+        p: 4,
+        maxWidth: '100vw',
+        position: 'relative'
+      }}>
+        {/* Left Column - Form */}
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 2, maxHeight: 'calc(100vh - 100px)', overflow: 'auto' }}>
+          <Typography variant="h6" gutterBottom sx={{ mb: 4, fontWeight: 'bold' }}>
+            Student Career Profile
+          </Typography>
+          
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
 
-        <Paper elevation={3} sx={{ p: 4, mb: 4, borderRadius: 2 }}>
+          {formSections.map((section) => (
+            <Box key={section.title} sx={{ mb: 4 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
+                {section.title}
+              </Typography>
+              
+              {section.maxSelections && (
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Select your top {section.maxSelections} choices
+                </Typography>
+              )}
+
+              <FormControl component="fieldset" sx={{ width: '100%' }}>
+                <FormGroup>
+                  {section.options.map((option) => (
+                    <FormControlLabel
+                      key={option}
+                      control={
+                        <Checkbox
+                          checked={selections[section.title].includes(option)}
+                          onChange={() => handleCheckboxChange(section.title, option)}
+                        />
+                      }
+                      label={option}
+                    />
+                  ))}
+                </FormGroup>
+              </FormControl>
+            </Box>
+          ))}
+
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            fullWidth
+          >
+            {isSubmitting ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={20} color="inherit" />
+                <span>Submitting...</span>
+              </Box>
+            ) : (
+              'Submit Profile'
+            )}
+          </Button>
+
+          {submitStatus === 'success' && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              Profile submitted successfully!
+            </Alert>
+          )}
+        </Paper>
+
+        {/* Middle Column - Majors */}
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 2, maxHeight: 'calc(100vh - 100px)', overflow: 'auto' }}>
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
             Interested Majors
           </Typography>
@@ -337,13 +519,9 @@ export default function StudentDashboard() {
             </Box>
           )}
 
-          <Box sx={{ 
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: 3
-          }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {majorGroups.map((group) => (
-              <Box key={group.name} sx={{ mb: 3 }}>
+              <Box key={group.name}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2 }}>
                   {group.name}
                 </Typography>
@@ -356,10 +534,7 @@ export default function StudentDashboard() {
                       onClick={() => handleMajorAdd(major)}
                       disabled={selectedMajors.includes(major)}
                       startIcon={<AddIcon />}
-                      sx={{ 
-                        justifyContent: 'flex-start',
-                        textTransform: 'none'
-                      }}
+                      sx={{ justifyContent: 'flex-start', textTransform: 'none' }}
                     >
                       {major}
                     </Button>
@@ -370,97 +545,46 @@ export default function StudentDashboard() {
           </Box>
         </Paper>
 
-        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {formSections.map((section) => (
-              <Step key={section.title}>
-                <StepLabel>{section.title}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
-          {activeStep < formSections.length ? (
-            <>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                {formSections[activeStep].title}
-              </Typography>
-              
-              {formSections[activeStep].maxSelections && (
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Select your top {formSections[activeStep].maxSelections} choices
-                </Typography>
-              )}
-
-              {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {error}
-                </Alert>
-              )}
-
-              <FormControl component="fieldset" sx={{ width: '100%' }}>
-                <FormGroup>
-                  {formSections[activeStep].options.map((option) => (
-                    <FormControlLabel
-                      key={option}
-                      control={
-                        <Checkbox
-                          checked={selections[formSections[activeStep].title].includes(option)}
-                          onChange={() => handleCheckboxChange(formSections[activeStep].title, option)}
-                        />
-                      }
-                      label={option}
-                    />
-                  ))}
-                </FormGroup>
-              </FormControl>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                <Button
-                  variant="outlined"
-                  onClick={handleBack}
-                  disabled={activeStep === 0}
-                >
-                  Back
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={handleNext}
-                >
-                  Next
-                </Button>
-              </Box>
-            </>
-          ) : (
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h6" gutterBottom>
-                All steps completed!
-              </Typography>
-              
-              {submitStatus === 'success' && (
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  Profile submitted successfully!
-                </Alert>
-              )}
-              
-              <Button
-                variant="contained"
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                sx={{ mt: 2 }}
-              >
-                {isSubmitting ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CircularProgress size={20} color="inherit" />
-                    <span>Submitting...</span>
-                  </Box>
-                ) : (
-                  'Submit Profile'
-                )}
-              </Button>
+        {/* Right Column - Vira Bot */}
+        <Box sx={{ position: 'relative' }}>
+          <BotContainer>
+            <Box sx={{ 
+              position: 'relative', 
+              width: '140px', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center'
+            }}>
+              <BotHead>
+                <Image 
+                  src="/bot.png" 
+                  alt="Vira Bot" 
+                  width={120} 
+                  height={120} 
+                  style={{ 
+                    objectFit: 'contain',
+                    position: 'relative',
+                    zIndex: 2
+                  }}
+                />
+              </BotHead>
+              <BotBody>
+                <HoverCircle sx={{ left: '20px' }} />
+                <HoverCircle sx={{ right: '20px' }} />
+              </BotBody>
             </Box>
-          )}
-        </Paper>
+            <SpeechBubble elevation={3}>
+              <Typography variant="body1">
+                Hello {userName}! Fill in your profile and select majors to get started.
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Clicking majors will generate clones of me specialized in providing mentoring and guidance by referencing industry professional experiences.
+              </Typography>
+            </SpeechBubble>
+          </BotContainer>
+        </Box>
       </Box>
     </ThemeProvider>
   );
 }
+

@@ -1,16 +1,14 @@
 'use client';
 
-import { Box, Typography } from '@mui/material';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function StudentDashboard() {
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Hello Student
-      </Typography>
-      <Typography variant="subtitle1" color="text.secondary">
-        Welcome to your dashboard
-      </Typography>
-    </Box>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    router.push('/dashboard/student/profile');
+  }, [router]);
+
+  return null;
 }

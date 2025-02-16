@@ -1,6 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import {
   Box,
   Paper,
@@ -11,15 +12,89 @@ import {
   Step,
   StepLabel,
   Grid,
-  FormControl,
-  FormLabel,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  Chip,
-  Autocomplete,
-  TextareaAutosize,
-} from "@mui/material";
+  CircularProgress,
+} from '@mui/material';
+import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
+
+// Vira Bot Styled Components
+const BotContainer = styled(Box)({
+  position: 'fixed',
+  right: '40px',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  display: 'flex',
+  alignItems: 'center',
+  animation: 'floatUpDown 3s ease-in-out infinite',
+  zIndex: 10,
+  '@keyframes floatUpDown': {
+    '0%, 100%': {
+      transform: 'translateY(-50%)',
+    },
+    '50%': {
+      transform: 'translateY(-60%)',
+    },
+  },
+});
+
+const BotHead = styled(Box)({
+  width: '120px',
+  height: '120px',
+  position: 'relative',
+  zIndex: 2,
+});
+
+const BotBody = styled(Box)({
+  width: '140px',
+  height: '160px',
+  backgroundColor: '#BDBDBD',
+  borderRadius: '10px',
+  marginTop: '-20px',
+  position: 'relative',
+  zIndex: 1,
+});
+
+const HoverCircle = styled(Box)({
+  width: '30px',
+  height: '30px',
+  backgroundColor: '#E0F4E0',
+  borderRadius: '50%',
+  position: 'absolute',
+  bottom: '-40px',
+  opacity: 0.8,
+  animation: 'pulse 2s ease-in-out infinite',
+  '@keyframes pulse': {
+    '0%, 100%': {
+      transform: 'scale(1)',
+      opacity: 0.8,
+    },
+    '50%': {
+      transform: 'scale(1.1)',
+      opacity: 1,
+    },
+  },
+});
+
+const SpeechBubble = styled(Paper)(({ theme }) => ({
+  position: 'absolute',
+  padding: theme.spacing(2),
+  backgroundColor: '#E0F4E0',
+  maxWidth: '250px',
+  borderRadius: '15px',
+  right: '180px',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  zIndex: 3,
+  '&:before': {
+    content: '""',
+    position: 'absolute',
+    right: '-20px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    borderStyle: 'solid',
+    borderWidth: '10px 20px 10px 0',
+    borderColor: 'transparent #E0F4E0 transparent transparent',
+  },
+}));
 
 const sections = [
   "Career Path Experience",
@@ -29,349 +104,136 @@ const sections = [
   "Real-World Advice",
 ];
 
-// TODO: add Major for form to work
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#896ED1',
+      light: '#A08FDA',
+      dark: '#6F4DC7',
+      contrastText: '#FFFFFF',
+    },
+  },
+});
+
 export default function ProfessionalProfile() {
   const [activeStep, setActiveStep] = useState(0);
+  const [userName, setUserName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    // Career Path Experience
-    currentRole: "",
-    industrySector: "",
-    yearsInRole: "",
-    companySize: "",
-    firstRole: "",
-    education: "",
-    previousIndustries: "",
-    careerPath: "",
-
-    // Daily Work Reality
-    dailyActivities: "",
-    timeAllocation: "",
-    challenges: "",
-    toolsUsed: "",
-    teamInteraction: "",
-    technicalSkills: "",
-    softSkills: "",
-    certifications: "",
-
-    // Industry Insights
-    industryTrends: "",
-    marketChanges: "",
-    newSkillRequirements: "",
-    industryAdvice: "",
-    entryBarriers: "",
-
-    // Career Development
-    learningResources: "",
-    professionalDevelopment: "",
-    industryNetworks: "",
-    keyFactors: "",
-    careerInvestments: "",
-
-    // Real-World Advice
-    successfulProjects: "",
-    challengingSituations: "",
-    careerLessons: "",
-    workLifeBalance: "",
-    earlyCareerAdvice: "",
+    // ... existing form data state ...
   });
 
-  const handleNext = () => {
-    setActiveStep((prevStep) => prevStep + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevStep) => prevStep - 1);
-  };
-
-  const handleInputChange =
-    (field: string) =>
-    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      setFormData({
-        ...formData,
-        [field]: event.target.value,
-      });
-    };
-
-  const handleSubmit = async () => {
-    const payload = {
-      bio: formData.careerPath || null,
-      industry: formData.industrySector || null,
-      currentRole: formData.currentRole || null,
-      company: formData.companySize || null,
-      yearsExperience: formData.yearsInRole
-        ? parseInt(formData.yearsInRole, 10)
-        : 1,
-      yearsInCurrentRole: formData.yearsInRole
-        ? parseInt(formData.yearsInRole, 10)
-        : 1,
-      careerTimeline: formData.careerPath || null,
-      careerJourney: formData.careerLessons || null,
-      coreDailyActivities: formData.dailyActivities || null,
-      toolsAndTechnology: formData.toolsUsed || null,
-      technicalSkills: formData.technicalSkills || null,
-      softSkills: formData.softSkills || null,
-      industryTrends: formData.industryTrends || null,
-      professionalDevelopmentActivities:
-        formData.professionalDevelopment || null,
-      adviceForNewcomers: formData.industryAdvice || null,
-      keySuccessFactors: formData.keyFactors || null,
-      resources: null,
-    };
-
-    console.log("Submitting Payload:", JSON.stringify(payload, null, 2)); // Debugging
-
-    try {
-      const response = await fetch(
-        "http://localhost:3000/api/user/professional-profile",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        console.error("Error response:", responseData);
-        alert(`Error: ${responseData.message || "Profile submission failed"}`);
-        return;
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const response = await fetch('/api/user/session');
+        const data = await response.json();
+        setUserName(data.user.name);
+      } catch (error) {
+        console.error('Error fetching session:', error);
       }
+    };
 
-      alert("Profile submitted successfully!");
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Something went wrong. Please check the console for more details.");
-    }
-  };
+    fetchSession();
+  }, []);
 
-  const renderCareerPathExperience = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12} md={6}>
-        <TextField
-          fullWidth
-          label="Current Job Title"
-          value={formData.currentRole}
-          onChange={handleInputChange("currentRole")}
-        />
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <TextField
-          fullWidth
-          label="Industry Sector"
-          value={formData.industrySector}
-          onChange={handleInputChange("industrySector")}
-        />
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <TextField
-          fullWidth
-          label="Years in Current Role"
-          value={formData.yearsInRole}
-          onChange={handleInputChange("yearsInRole")}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Career Progression Timeline"
-          value={formData.careerPath}
-          onChange={handleInputChange("careerPath")}
-          placeholder="Describe your career progression, including major role changes and responsibilities"
-        />
-      </Grid>
-    </Grid>
-  );
-
-  const renderDailyWorkReality = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Core Daily Activities"
-          value={formData.dailyActivities}
-          onChange={handleInputChange("dailyActivities")}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          multiline
-          rows={3}
-          label="Tools and Technologies Used"
-          value={formData.toolsUsed}
-          onChange={handleInputChange("toolsUsed")}
-        />
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <TextField
-          fullWidth
-          multiline
-          rows={3}
-          label="Technical Skills Required"
-          value={formData.technicalSkills}
-          onChange={handleInputChange("technicalSkills")}
-        />
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <TextField
-          fullWidth
-          multiline
-          rows={3}
-          label="Soft Skills Needed"
-          value={formData.softSkills}
-          onChange={handleInputChange("softSkills")}
-        />
-      </Grid>
-    </Grid>
-  );
-
-  const renderIndustryInsights = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Industry Trends"
-          value={formData.industryTrends}
-          onChange={handleInputChange("industryTrends")}
-          placeholder="What trends are shaping your industry?"
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Advice for Newcomers"
-          value={formData.industryAdvice}
-          onChange={handleInputChange("industryAdvice")}
-          placeholder="What would you tell someone entering your field today?"
-        />
-      </Grid>
-    </Grid>
-  );
-
-  const renderCareerDevelopment = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Professional Development Activities"
-          value={formData.professionalDevelopment}
-          onChange={handleInputChange("professionalDevelopment")}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Key Success Factors"
-          value={formData.keyFactors}
-          onChange={handleInputChange("keyFactors")}
-        />
-      </Grid>
-    </Grid>
-  );
-
-  const renderRealWorldAdvice = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Successful Projects"
-          value={formData.successfulProjects}
-          onChange={handleInputChange("successfulProjects")}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Career Lessons"
-          value={formData.careerLessons}
-          onChange={handleInputChange("careerLessons")}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Early Career Advice"
-          value={formData.earlyCareerAdvice}
-          onChange={handleInputChange("earlyCareerAdvice")}
-        />
-      </Grid>
-    </Grid>
-  );
-
-  const renderStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return renderCareerPathExperience();
-      case 1:
-        return renderDailyWorkReality();
-      case 2:
-        return renderIndustryInsights();
-      case 3:
-        return renderCareerDevelopment();
-      case 4:
-        return renderRealWorldAdvice();
-      default:
-        return null;
-    }
-  };
+  // ... existing handlers ...
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: "auto", p: 3 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Professional Profile
-        </Typography>
+    <ThemeProvider theme={theme}>
+      <Box sx={{ 
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr',
+        gap: 4,
+        p: 4,
+        maxWidth: '100vw',
+        position: 'relative'
+      }}>
+        {/* Left Column - Form */}
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 2, maxHeight: 'calc(100vh - 100px)', overflow: 'auto' }}>
+          <Typography variant="h4" gutterBottom>
+            Professional Profile
+          </Typography>
 
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {sections.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+            {sections.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
 
-        <form>
-          {renderStepContent(activeStep)}
+          <form>
+            {renderStepContent(activeStep)}
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
-            <Button disabled={activeStep === 0} onClick={handleBack}>
-              Back
-            </Button>
-            {activeStep === sections.length - 1 ? (
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleSubmit}
-              >
-                Submit
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+              <Button disabled={activeStep === 0} onClick={handleBack}>
+                Back
               </Button>
-            ) : (
-              <Button variant="contained" onClick={handleNext}>
-                Next
-              </Button>
-            )}
-          </Box>
-        </form>
-      </Paper>
-    </Box>
+              {activeStep === sections.length - 1 ? (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CircularProgress size={20} color="inherit" />
+                      <span>Submitting...</span>
+                    </Box>
+                  ) : (
+                    'Submit'
+                  )}
+                </Button>
+              ) : (
+                <Button variant="contained" onClick={handleNext}>
+                  Next
+                </Button>
+              )}
+            </Box>
+          </form>
+        </Paper>
+
+        {/* Right Column - Vira Bot */}
+        <Box sx={{ position: 'relative' }}>
+          <BotContainer>
+            <Box sx={{ 
+              position: 'relative', 
+              width: '140px', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center'
+            }}>
+              <BotHead>
+                <Image 
+                  src="/bot.png" 
+                  alt="Vira Bot" 
+                  width={120} 
+                  height={120} 
+                  style={{ 
+                    objectFit: 'contain',
+                    position: 'relative',
+                    zIndex: 2
+                  }}
+                />
+              </BotHead>
+              <BotBody>
+                <HoverCircle sx={{ left: '20px' }} />
+                <HoverCircle sx={{ right: '20px' }} />
+              </BotBody>
+            </Box>
+            <SpeechBubble elevation={3}>
+              <Typography variant="body1">
+                Hi {userName}! Thank you for joining us.
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                If you have side projects and are looking for enthusiastic people to work with, make a post in the gig menu. Please share your professional experience to help improve our AI mentors.
+              </Typography>
+            </SpeechBubble>
+          </BotContainer>
+        </Box>
+      </Box>
+    </ThemeProvider>
   );
 }
