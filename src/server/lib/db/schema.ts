@@ -6,7 +6,7 @@ import {
   boolean,
   uuid,
 } from "drizzle-orm/pg-core";
-import { createSelectSchema } from "drizzle-zod";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -79,3 +79,56 @@ export const student = pgTable("student", {
 });
 
 export const userPreferencesSelectSchema = createSelectSchema(student);
+export const userPreferencesinsertSchema = createInsertSchema(student);
+
+export const professional = pgTable("professional", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => user.id, { onDelete: "cascade" }),
+
+  // Career Basics
+  bio: text("bio").notNull(),
+  industry: text("industry").notNull(),
+  currentRole: text("current_role").notNull(),
+  company: text("company"),
+  yearsExperience: integer("years_experience").notNull(),
+  yearsInCurrentRole: integer("years_in_current_role").notNull(),
+
+  // Career Growth
+  careerTimeline: text("career_timeline").notNull(),
+  careerJourney: text("career_journey").notNull(),
+
+  // Day-to-Day Work
+  coreDailyActivities: text("core_daily_activities").notNull(),
+  toolsAndTechnology: text("tools_and_technology").notNull(),
+
+  // Skills
+  technicalSkills: text("technical_skills").notNull(),
+  softSkills: text("soft_skills").notNull(),
+
+  // Industry & Development
+  industryTrends: text("industry_trends").notNull(),
+  professionalDevelopmentActivities: text(
+    "professional_development_activities"
+  ),
+
+  // Advice & Success Factors
+  adviceForNewcomers: text("advice_for_newcomers").notNull(),
+  keySuccessFactors: text("key_success_factors").notNull(),
+
+  // Optional Fields
+  resources: text("resources"),
+
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const professionalSelectSchema = createSelectSchema(professional);
+export const professionalinsertSchema = createInsertSchema(professional).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+});
