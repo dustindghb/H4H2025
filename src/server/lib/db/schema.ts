@@ -67,14 +67,15 @@ export const student = pgTable("student", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")
     .notNull()
+    .unique()
     .references(() => user.id, { onDelete: "cascade" }),
   skills: text("skills").array().notNull(),
   workEnvironments: text("work_environments").array().notNull(),
   coreValues: text("core_values").notNull(),
   industryInterests: text("industry_interests").array().notNull(),
   learningStyles: text("learning_styles").array().notNull(),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const userPreferencesSelectSchema = createSelectSchema(student);

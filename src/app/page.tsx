@@ -1,27 +1,37 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Box, Button, Typography, useTheme } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import React, { useEffect } from "react";
+import { Box, Button, Typography, useTheme } from "@mui/material";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { createAuthClient } from "better-auth/react";
+const { useSession } = createAuthClient();
 
 export default function LandingPage() {
+  const { data: session, isPending, error } = useSession();
+
   const router = useRouter();
   const theme = useTheme();
 
-  const handleSelection = (type: 'student' | 'professional') => {
+  const handleSelection = (type: "student" | "professional") => {
     router.push(`/dashboard/${type}`);
   };
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push("/auth/signin");
+    }
+  }, [session, isPending, router]);
 
   return (
     <Box
       sx={{
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: '#F5F5F5',
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "#F5F5F5",
         gap: 3,
         p: 2,
       }}
@@ -29,14 +39,14 @@ export default function LandingPage() {
       <Box
         sx={{
           maxWidth: 500,
-          width: '100%',
-          bgcolor: 'white',
+          width: "100%",
+          bgcolor: "white",
           borderRadius: 2,
           p: 4,
           boxShadow: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
           gap: 3,
         }}
       >
@@ -45,13 +55,13 @@ export default function LandingPage() {
           sx={{
             width: 100,
             height: 100,
-            position: 'relative',
-            bgcolor: '#E8E3F7',
+            position: "relative",
+            bgcolor: "#E8E3F7",
             borderRadius: 4,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
           }}
         >
           <svg
@@ -75,49 +85,50 @@ export default function LandingPage() {
         </Box>
 
         {/* Welcome Text */}
-        <Box sx={{ textAlign: 'center' }}>
+        <Box sx={{ textAlign: "center" }}>
           <Typography variant="h5" gutterBottom>
             Hi, I am Vira.
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Are you a professional looking to share your experience or a student looking for advice?
+            Are you a professional looking to share your experience or a student
+            looking for advice?
           </Typography>
         </Box>
 
         {/* Selection Buttons */}
         <Box
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
+            display: "flex",
+            flexDirection: "column",
             gap: 2,
-            width: '100%',
+            width: "100%",
             maxWidth: 300,
           }}
         >
           <Button
             variant="contained"
-            onClick={() => handleSelection('student')}
+            onClick={() => handleSelection("student")}
             sx={{
-              bgcolor: '#9575CD',
-              '&:hover': {
-                bgcolor: '#7E57C2',
+              bgcolor: "#9575CD",
+              "&:hover": {
+                bgcolor: "#7E57C2",
               },
               py: 1.5,
-              borderRadius: 'full',
+              borderRadius: "full",
             }}
           >
             Student
           </Button>
           <Button
             variant="contained"
-            onClick={() => handleSelection('professional')}
+            onClick={() => handleSelection("professional")}
             sx={{
-              bgcolor: '#9575CD',
-              '&:hover': {
-                bgcolor: '#7E57C2',
+              bgcolor: "#9575CD",
+              "&:hover": {
+                bgcolor: "#7E57C2",
               },
               py: 1.5,
-              borderRadius: 'full',
+              borderRadius: "full",
             }}
           >
             Professional
