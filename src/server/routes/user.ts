@@ -225,7 +225,7 @@ app
       z.object({
         skills: z.array(z.string()),
         workEnvironments: z.array(z.string()),
-        coreValues: z.string(),
+        coreValues: z.array(z.string()),
         industryInterests: z.array(z.string()),
         learningStyles: z.array(z.string()),
         intrestedMajors: z.array(z.string()),
@@ -249,6 +249,7 @@ app
           .insert(_student)
           .values({
             ...preferences,
+            coreValues: preferences.coreValues.join(","), // Convert arrays to comma-separated strings
             userId: user.id,
           })
           .returning();
