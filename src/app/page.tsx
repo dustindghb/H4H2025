@@ -1,27 +1,121 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { Box, Button, Typography, useTheme } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Box, Button, Typography, useTheme, CircularProgress } from "@mui/material";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { createAuthClient } from "better-auth/react";
 const { useSession } = createAuthClient();
 
+interface UserSessionResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    image: string | null;
+    createdAt: string;
+    updatedAt: string;
+    type: string | null;
+  };
+  session: {
+    id: string;
+    name: string;
+    email: string;
+    emailVerified: boolean;
+    image: string | null;
+    createdAt: string;
+    updatedAt: string;
+    type: string | null;
+  };
+}
+
 export default function LandingPage() {
   const { data: session, isPending, error } = useSession();
-
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const theme = useTheme();
 
-  const handleSelection = (type: "student" | "professional") => {
-    router.push(`/dashboard/${type}`);
-  };
-
   useEffect(() => {
-    if (!isPending && !session) {
-      router.push("/auth/signin");
+    const checkUserType = async () => {
+      if (!session) {
+        console.log('No session found');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        console.log('Fetching user session...');
+        const response = await fetch('/api/user/session');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch user session');
+        }
+
+        const data: UserSessionResponse = await response.json();
+        console.log('User response:', data);
+        console.log('User type:', data.user.type);
+        
+        if (data.user.type === 'student' || data.user.type === 'professional') {
+          console.log(`User type found: ${data.user.type}, redirecting...`);
+          await router.push(`/dashboard/${data.user.type}`);
+          return;
+        } else {
+          console.log('No valid user type found');
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error checking user type:', error);
+        setIsLoading(false);
+      }
+    };
+
+    if (!isPending) {
+      if (session) {
+        checkUserType();
+      } else {
+        router.push("/auth/signin");
+      }
     }
   }, [session, isPending, router]);
+
+  const handleSelection = async (type: "student" | "professional") => {
+    try {
+      setIsLoading(true);
+
+      const response = await fetch('/api/user/type', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user type');
+      }
+
+      router.push(`/dashboard/${type}`);
+    } catch (error) {
+      console.error('Error updating user type:', error);
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading || isPending) {
+    return (
+      <Box
+        sx={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CircularProgress sx={{ color: "#9575CD" }} />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -95,7 +189,6 @@ export default function LandingPage() {
           </Typography>
         </Box>
 
-        {/* Selection Buttons */}
         <Box
           sx={{
             display: "flex",
