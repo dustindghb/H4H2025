@@ -29,6 +29,7 @@ const sections = [
   "Real-World Advice",
 ];
 
+// TODO: add Major for form to work
 export default function ProfessionalProfile() {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -120,11 +121,14 @@ export default function ProfessionalProfile() {
     console.log("Submitting Payload:", JSON.stringify(payload, null, 2)); // Debugging
 
     try {
-      const response = await fetch("http://localhost:3000/api/user/professional-profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        "http://localhost:3000/api/user/professional-profile",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const responseData = await response.json();
 
