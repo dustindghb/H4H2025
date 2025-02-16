@@ -73,6 +73,7 @@ export const student = pgTable("student", {
   workEnvironments: text("work_environments").array().notNull(),
   coreValues: text("core_values").notNull(),
   industryInterests: text("industry_interests").array().notNull(),
+  intrestedMajors: text("intrested_majors").array().notNull(),
   learningStyles: text("learning_styles").array().notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

@@ -211,6 +211,7 @@ app
         coreValues: z.string(),
         industryInterests: z.array(z.string()),
         learningStyles: z.array(z.string()),
+        intrestedMajors: z.array(z.string()),
       })
     ),
     async (c) => {
