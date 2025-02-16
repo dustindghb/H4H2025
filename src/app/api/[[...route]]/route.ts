@@ -6,6 +6,7 @@ import { describeRoute } from "hono-openapi";
 import { resolver, validator as vValidator } from "hono-openapi/zod";
 import { openAPISpecs } from "hono-openapi";
 import { apiReference } from "@scalar/hono-api-reference";
+import { HTTPException } from "hono/http-exception";
 import { auth } from "@/server/lib/auth"; // path to your auth file
 import user from "@/server/routes/user"; // path to your user file
 
@@ -24,21 +25,34 @@ const querySchema = z.object({
   name: z.string(),
 });
 
-app
-  .use("*", async (c, next) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+app.use("*", async (c, next) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
 
-    if (!session) {
-      c.set("user", null);
-      c.set("session", null);
-      return next();
-    }
-
-    c.set("user", session.user);
-    c.set("session", session.session);
+  if (!session) {
+    c.set("user", null);
+    c.set("session", null);
     return next();
-  })
-  .on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw))
+  }
+
+  c.set("user", session.user);
+  c.set("session", session.session);
+  return next();
+});
+
+app.onError((err, c) => {
+  console.error(err.message);
+  if (err instanceof HTTPException) {
+    // Get the custom response
+    return c.json({ error: err.message }, err.status);
+  } else if (err instanceof Error) {
+    return c.json({ error: err.message }, 500);
+  } else {
+    return c.json({ error: "An unknown error occured" }, 500);
+  }
+});
+
+app
+  .on(["POST", "GET"], "/auth/**", (c) => auth.handler(c.req.raw))
   .get(
     "/hello",
     describeRoute({
