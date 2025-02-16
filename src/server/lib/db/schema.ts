@@ -86,7 +86,6 @@ export const professional = pgTable("professional", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")
     .notNull()
-    .unique()
     .references(() => user.id, { onDelete: "cascade" }),
 
   // Career Basics
@@ -122,8 +121,21 @@ export const professional = pgTable("professional", {
   // Optional Fields
   resources: text("resources"),
 
+  assistantId: text("assistant_id"),
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const thread = pgTable("thread", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  assistantId: text("assistant_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  metadata: text("metadata"), // For any additional OpenAI thread metadata
 });
 
 export const professionalSelectSchema = createSelectSchema(professional);

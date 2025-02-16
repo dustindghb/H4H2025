@@ -19,6 +19,13 @@ import {
   professional as _professional,
 } from "../lib/db/schema";
 import { and, desc, eq } from "drizzle-orm";
+import OpenAI from "openai";
+import {
+  createProfessionalEmbedding,
+  initializeThread,
+} from "../lib/openai/utils";
+import { VectorStoreService } from "../lib/services/vector-store";
+import { AssistantService } from "../lib/services/assistant";
 
 const app = new Hono();
 
@@ -325,10 +332,44 @@ app
           })
           .returning();
 
+        const openai = new OpenAI();
+        const vectorStore = new VectorStoreService(openai);
+        const assistantService = new AssistantService(openai, vectorStore);
+
+        // Get existing assistant for major
+        const { assistantId, vectorStoreId } =
+          await assistantService.getAssistantForMajor("Computer Science");
+
+        // Create file from professional info
+        const file = await openai.files.create({
+          file: new File(
+            [JSON.stringify(professionalInfo)],
+            "professionalInfo.json",
+            { type: "application/json" }
+          ),
+          purpose: "assistants",
+        });
+
+        // Attach file to existing assistant and vector store
+        await assistantService.attachFileToAssistant({
+          assistantId,
+          vectorStoreId,
+          fileId: file.id,
+        });
+
+        // Store IDs in professional profile
+        await db
+          .update(_professional)
+          .set({
+            assistantId,
+          })
+          .where(eq(_professional.id, newMentorProfile[0].id));
+
         return c.json({
           mentor: newMentorProfile[0],
         });
       } catch (error) {
+        console.error(error);
         return c.json(
           {
             error: "Failed to create mentor profile",
