@@ -145,15 +145,24 @@ app
     }),
     async (c) => {
       const session = c.get("session");
-      const user = c.get("user");
+      const userSession = c.get("user");
 
-      if (!user)
+      if (!userSession)
         return c.json(
           {
             error: "Unauthorized",
           },
           401
         );
+
+      const [user] = await db
+        .select()
+        .from(_user)
+        .where(eq(_user.id, userSession.id));
+
+      if (!user) {
+        return c.json({ error: "User not found" }, 404);
+      }
 
       return c.json({
         session,
