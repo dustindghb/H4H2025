@@ -114,7 +114,7 @@ export default function SignIn() {
                 textFillColor: "transparent",
               }}
             >
-              Vera AI
+            Vira
             </Typography>
           </Box>
 

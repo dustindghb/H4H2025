@@ -28,6 +28,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
 const drawerWidth = 240;
+const INDIGO_COLOR = '#7B8CCC'; // Darker pastel blueish-purple
+const INDIGO_LIGHT = '#E6EBFF'; // Lighter pastel shade for hover/selected states
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -90,8 +92,8 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   };
 
   const drawer = (
-    <Box>
-      <Toolbar>
+    <Box sx={{ bgcolor: 'white', height: '100%' }}>
+      <Toolbar sx={{ bgcolor: INDIGO_COLOR, color: 'white' }}>
         <Typography variant="h6" noWrap component="div">
           Student Dashboard
         </Typography>
@@ -102,10 +104,21 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             <ListItemButton
               selected={pathname === item.path}
               onClick={() => handleNavigation(item.path)}
+              sx={{
+                '&.Mui-selected': {
+                  bgcolor: INDIGO_LIGHT,
+                  '&:hover': {
+                    bgcolor: INDIGO_LIGHT,
+                  },
+                },
+                '&:hover': {
+                  bgcolor: INDIGO_LIGHT,
+                },
+              }}
             >
               <ListItemIcon
                 sx={{
-                  color: pathname === item.path ? "primary.main" : "inherit",
+                  color: pathname === item.path ? INDIGO_COLOR : 'inherit',
                 }}
               >
                 {item.icon}
@@ -113,14 +126,24 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
               <ListItemText
                 primary={item.text}
                 sx={{
-                  color: pathname === item.path ? "primary.main" : "inherit",
+                  '& .MuiTypography-root': {
+                    color: pathname === item.path ? INDIGO_COLOR : 'inherit',
+                    fontWeight: pathname === item.path ? 500 : 400,
+                  },
                 }}
               />
             </ListItemButton>
           </ListItem>
         ))}
         <ListItem disablePadding>
-          <ListItemButton onClick={handleLogout}>
+          <ListItemButton 
+            onClick={handleLogout}
+            sx={{
+              '&:hover': {
+                bgcolor: INDIGO_LIGHT,
+              },
+            }}
+          >
             <ListItemIcon>
               <LogoutIcon />
             </ListItemIcon>
@@ -139,6 +162,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
+          bgcolor: INDIGO_COLOR,
         }}
       >
         <Toolbar>
@@ -174,6 +198,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
+              bgcolor: 'white',
             },
           }}
         >
@@ -186,6 +211,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             "& .MuiDrawer-paper": {
               boxSizing: "border-box",
               width: drawerWidth,
+              bgcolor: 'white',
             },
           }}
           open
