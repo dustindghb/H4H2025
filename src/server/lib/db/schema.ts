@@ -4,6 +4,7 @@ import {
   integer,
   timestamp,
   boolean,
+  uuid,
 } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
 
@@ -15,6 +16,7 @@ export const user = pgTable("user", {
   image: text("image"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
+  type: text("type", { enum: ["student", "professional"] }),
 });
 
 export const userSelectSchema = createSelectSchema(user);
@@ -60,3 +62,19 @@ export const verification = pgTable("verification", {
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
 });
+
+export const student = pgTable("student", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  skills: text("skills").array().notNull(),
+  workEnvironments: text("work_environments").array().notNull(),
+  coreValues: text("core_values").notNull(),
+  industryInterests: text("industry_interests").array().notNull(),
+  learningStyles: text("learning_styles").array().notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+});
+
+export const userPreferencesSelectSchema = createSelectSchema(student);

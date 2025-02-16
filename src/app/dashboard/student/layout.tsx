@@ -1,30 +1,31 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { 
-  AppBar, 
-  Box, 
-  CssBaseline, 
-  Drawer, 
-  IconButton, 
-  List, 
-  ListItem, 
-  ListItemButton, 
-  ListItemIcon, 
-  ListItemText, 
-  Toolbar, 
+import React, { useState } from "react";
+import {
+  AppBar,
+  Box,
+  CssBaseline,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Toolbar,
   Typography,
   useMediaQuery,
-  useTheme
-} from '@mui/material';
+  useTheme,
+} from "@mui/material";
 import {
   Menu as MenuIcon,
   Person as PersonIcon,
   School as SchoolIcon,
   Work as WorkIcon,
-  Logout as LogoutIcon
-} from '@mui/icons-material';
-import { useRouter, usePathname } from 'next/navigation';
+  Logout as LogoutIcon,
+} from "@mui/icons-material";
+import { useRouter, usePathname } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 const drawerWidth = 240;
 
@@ -40,27 +41,27 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    text: 'Profile',
-    path: '/dashboard/student/profile',
-    icon: <PersonIcon />
+    text: "Profile",
+    path: "/dashboard/student/profile",
+    icon: <PersonIcon />,
   },
   {
-    text: 'Mentors',
-    path: '/dashboard/student/mentors',
-    icon: <SchoolIcon />
+    text: "Mentors",
+    path: "/dashboard/student/mentors",
+    icon: <SchoolIcon />,
   },
   {
-    text: 'Gig Work',
-    path: '/dashboard/student/gigs',
-    icon: <WorkIcon />
-  }
+    text: "Gig Work",
+    path: "/dashboard/student/gigs",
+    icon: <WorkIcon />,
+  },
 ];
 
 export default function StudentLayout({ children }: StudentLayoutProps) {
   const theme = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleDrawerToggle = () => {
@@ -74,9 +75,18 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
     }
   };
 
-  const handleLogout = () => {
-    // Add logout logic here
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            router.push("/auth/signin");
+          },
+        },
+      });
+    } catch (err) {
+      console.error("Failed to sign out", err);
+    }
   };
 
   const drawer = (
@@ -89,19 +99,21 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
       <List>
         {navItems.map((item) => (
           <ListItem key={item.text} disablePadding>
-            <ListItemButton 
+            <ListItemButton
               selected={pathname === item.path}
               onClick={() => handleNavigation(item.path)}
             >
-              <ListItemIcon sx={{ 
-                color: pathname === item.path ? 'primary.main' : 'inherit' 
-              }}>
+              <ListItemIcon
+                sx={{
+                  color: pathname === item.path ? "primary.main" : "inherit",
+                }}
+              >
                 {item.icon}
               </ListItemIcon>
-              <ListItemText 
-                primary={item.text} 
+              <ListItemText
+                primary={item.text}
                 sx={{
-                  color: pathname === item.path ? 'primary.main' : 'inherit'
+                  color: pathname === item.path ? "primary.main" : "inherit",
                 }}
               />
             </ListItemButton>
@@ -120,7 +132,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: "flex" }}>
       <CssBaseline />
       <AppBar
         position="fixed"
@@ -135,12 +147,13 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: 2, display: { sm: "none" } }}
           >
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div">
-            {navItems.find(item => item.path === pathname)?.text || 'Dashboard'}
+            {navItems.find((item) => item.path === pathname)?.text ||
+              "Dashboard"}
           </Typography>
         </Toolbar>
       </AppBar>
@@ -157,10 +170,10 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             keepMounted: true,
           }}
           sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth 
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
             },
           }}
         >
@@ -169,10 +182,10 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: drawerWidth 
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
             },
           }}
           open
@@ -187,8 +200,8 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          minHeight: '100vh',
-          bgcolor: 'background.default'
+          minHeight: "100vh",
+          bgcolor: "background.default",
         }}
       >
         <Toolbar />

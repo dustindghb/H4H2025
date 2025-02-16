@@ -3,7 +3,7 @@ import { handle } from "hono/vercel";
 import { z } from "zod";
 import { describeRoute } from "hono-openapi";
 // You can import these for your preferred validation library
-import { resolver, validator as vValidator } from "hono-openapi/zod";
+import { resolver, validator as zValidator } from "hono-openapi/zod";
 import { openAPISpecs } from "hono-openapi";
 import { apiReference } from "@scalar/hono-api-reference";
 import { HTTPException } from "hono/http-exception";
@@ -66,7 +66,7 @@ app
         },
       },
     }),
-    vValidator("query", querySchema),
+    zValidator("query", querySchema),
     (c) => {
       const query = c.req.valid("query");
       return c.text(`Hello ${query?.name ?? "Hono"}!`);
@@ -98,3 +98,4 @@ app
 
 export const GET = handle(app);
 export const POST = handle(app);
+export const PATCH = handle(app);

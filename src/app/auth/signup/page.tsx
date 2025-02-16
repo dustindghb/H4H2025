@@ -61,7 +61,7 @@ export default function SignUp() {
         {
           provider: "google",
         },
-        { onSuccess: () => router.push("/onboarding") }
+        { onSuccess: () => router.push("/") }
       );
 
       if (result.error) {

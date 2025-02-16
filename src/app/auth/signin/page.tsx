@@ -54,7 +54,7 @@ export default function SignIn() {
         {
           provider: "google",
         },
-        { onSuccess: () => router.push("/dashboard/student") }
+        { onSuccess: () => router.push("/") }
       );
 
       if (result.error) {
